@@ -3,8 +3,8 @@ package hcl
 import (
 	"fmt"
 
-	"github.com/hashicorp/hcl/hcl"
-	"github.com/hashicorp/hcl/json"
+	"github.com/bww/hcl/hcl"
+	"github.com/bww/hcl/json"
 )
 
 // Parse parses the given input and returns the root object.

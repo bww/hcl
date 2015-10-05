@@ -7,8 +7,9 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
-	"github.com/hashicorp/hcl/hcl"
+	"github.com/bww/hcl/hcl"
 )
 
 // This is the tag to use with structures to have settings for HCL
@@ -70,6 +71,8 @@ func (d *decoder) decode(name string, o *hcl.Object, result reflect.Value) error
 		return d.decodeFloat(name, o, result)
 	case reflect.Int:
 		return d.decodeInt(name, o, result)
+	case reflect.Int64:
+		return d.decodeInt64(name, o, result)
 	case reflect.Interface:
 		// When we see an interface, we make our own thing
 		return d.decodeInterface(name, o, result)
@@ -128,6 +131,40 @@ func (d *decoder) decodeInt(name string, o *hcl.Object, result reflect.Value) er
 		return fmt.Errorf("%s: unknown type %v", name, o.Type)
 	}
 
+	return nil
+}
+
+func (d *decoder) decodeInt64(name string, o *hcl.Object, result reflect.Value) error {
+	switch o.Type {
+		case hcl.ValueTypeInt:
+			result.SetInt(int64(o.Value.(int)))
+		case hcl.ValueTypeString:
+			s := o.Value.(string)
+			u := int64(1)
+			
+			if len(s) > 1 {
+				switch s[len(s)-1] {
+					case 's':
+						s = s[:len(s)-1]
+						u = int64(time.Second)
+					case 'h':
+						s = s[:len(s)-1]
+						u = int64(time.Hour)
+					case 'd':
+						s = s[:len(s)-1]
+						u = int64(time.Hour * 24)
+				}
+			}
+			
+			v, err := strconv.ParseInt(s, 0, 0)
+			if err != nil {
+				return err
+			}
+			
+			result.SetInt(int64(v) * u)
+		default:
+			return fmt.Errorf("%s: unknown type %v", name, o.Type)
+	}
 	return nil
 }
 
