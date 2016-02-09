@@ -589,6 +589,57 @@ func TestDecode_intString(t *testing.T) {
 	}
 }
 
+func TestDecode_intTypes(t *testing.T) {
+	var value struct {
+		Count			int
+		
+		Count8 		int8
+		Count16 	int16
+		Count32 	int32
+		Count64 	int64
+		
+		CountU8 	uint8
+		CountU16 	uint16
+		CountU32 	uint32
+		CountU64 	uint64
+	}
+
+	err := Decode(&value, testReadFile(t, "various_ints.hcl"))
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+
+	if value.Count != 123456 {
+		t.Fatalf("bad: %#v", value.Count)
+	}
+	
+	if value.Count8 != 12 {
+		t.Fatalf("bad: %#v", value.Count8)
+	}
+	if value.Count16 != 12345 {
+		t.Fatalf("bad: %#v", value.Count16)
+	}
+	if value.Count32 != 12345678 {
+		t.Fatalf("bad: %#v", value.Count32)
+	}
+	if value.Count64 != 123456789012 {
+		t.Fatalf("bad: %#v", value.Count64)
+	}
+	
+	if value.CountU8 != 12 {
+		t.Fatalf("bad: %#v", value.CountU8)
+	}
+	if value.CountU16 != 12345 {
+		t.Fatalf("bad: %#v", value.CountU16)
+	}
+	if value.CountU32 != 12345678 {
+		t.Fatalf("bad: %#v", value.CountU32)
+	}
+	if value.CountU64 != 123456789012 {
+		t.Fatalf("bad: %#v", value.CountU64)
+	}
+}
+
 func TestDecode_Node(t *testing.T) {
 	// given
 	var value struct {

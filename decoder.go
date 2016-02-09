@@ -7,7 +7,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-
+	// "time"
+	
 	"github.com/bww/hcl/hcl/ast"
 	"github.com/bww/hcl/hcl/parser"
 	"github.com/bww/hcl/hcl/token"
@@ -80,10 +81,9 @@ func (d *decoder) decode(name string, node ast.Node, result reflect.Value) error
 		return d.decodeBool(name, node, result)
 	case reflect.Float64:
 		return d.decodeFloat(name, node, result)
-	case reflect.Int:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return d.decodeInt(name, node, result)
-	case reflect.Interface:
-		// When we see an interface, we make our own thing
+	case reflect.Interface: // When we see an interface, we make our own thing
 		return d.decodeInterface(name, node, result)
 	case reflect.Map:
 		return d.decodeMap(name, node, result)
@@ -148,12 +148,53 @@ func (d *decoder) decodeInt(name string, node ast.Node, result reflect.Value) er
 	case *ast.LiteralType:
 		switch n.Token.Type {
 		case token.NUMBER:
-			v, err := strconv.ParseInt(n.Token.Text, 0, 0)
+			// get the real, underlying kind
+			rkind := reflect.ValueOf(result.Interface()).Kind()
+			
+			var bits int
+			switch rkind {
+			case reflect.Int:
+				bits = 0
+			case reflect.Int8, reflect.Uint8:
+				bits = 8
+			case reflect.Int16, reflect.Uint16:
+				bits = 16
+			case reflect.Int32, reflect.Uint32:
+				bits = 32
+			case reflect.Int64, reflect.Uint64:
+				bits = 64
+			default:
+				return fmt.Errorf("Unsupported type: %v", rkind)
+			}
+			
+			v, err := strconv.ParseInt(n.Token.Text, 0, bits)
 			if err != nil {
 				return err
 			}
-
-			result.Set(reflect.ValueOf(int(v)))
+			
+			switch rkind {
+			case reflect.Int:
+				result.Set(reflect.ValueOf(int(v)))
+			case reflect.Int8:
+				result.Set(reflect.ValueOf(int8(v)))
+			case reflect.Int16:
+				result.Set(reflect.ValueOf(int16(v)))
+			case reflect.Int32:
+				result.Set(reflect.ValueOf(int32(v)))
+			case reflect.Int64:
+				result.Set(reflect.ValueOf(int64(v)))
+			case reflect.Uint8:
+				result.Set(reflect.ValueOf(uint8(v)))
+			case reflect.Uint16:
+				result.Set(reflect.ValueOf(uint16(v)))
+			case reflect.Uint32:
+				result.Set(reflect.ValueOf(uint32(v)))
+			case reflect.Uint64:
+				result.Set(reflect.ValueOf(uint64(v)))
+			default:
+				return fmt.Errorf("Unsupported type: %v", rkind)
+			}
+			
 			return nil
 		case token.STRING:
 			v, err := strconv.ParseInt(n.Token.Value().(string), 0, 0)
