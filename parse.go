@@ -2,15 +2,9 @@ package hcl
 
 import (
 	"fmt"
-
-<<<<<<< HEAD
-	"github.com/bww/hcl/hcl"
-	"github.com/bww/hcl/json"
-=======
-	"github.com/hashicorp/hcl/hcl/ast"
-	hclParser "github.com/hashicorp/hcl/hcl/parser"
-	jsonParser "github.com/hashicorp/hcl/json/parser"
->>>>>>> upstream/master
+	"github.com/bww/hcl/hcl/ast"
+	hclParser "github.com/bww/hcl/hcl/parser"
+	jsonParser "github.com/bww/hcl/json/parser"
 )
 
 // Parse parses the given input and returns the root object.

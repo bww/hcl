@@ -1,4 +1,7 @@
-TEST?=./...
+TEST 		?= ./...
+
+ROOT		:= $(shell cd ../../../.. && pwd)
+GOPATH 	:= $(GOPATH):$(ROOT)
 
 default: test
 
