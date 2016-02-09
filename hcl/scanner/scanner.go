@@ -128,6 +128,7 @@ func (s *Scanner) Scan() token.Token {
 	}
 
 	var tok token.Type
+	var tail string
 
 	// token text markings
 	s.tokStart = s.srcPos.Offset - s.lastCharLen
@@ -156,6 +157,10 @@ func (s *Scanner) Scan() token.Token {
 		}
 	case isDecimal(ch):
 		tok = s.scanNumber(ch)
+		lit := s.scanUnits() // check for units when parsing a number
+		if lit != "" {
+			tail = lit
+		}
 	default:
 		switch ch {
 		case eof:
@@ -173,6 +178,10 @@ func (s *Scanner) Scan() token.Token {
 				tok = token.FLOAT
 				ch = s.scanMantissa(ch)
 				ch = s.scanExponent(ch)
+			}
+			lit := s.scanUnits() // check for units when parsing a number
+			if lit != "" {
+				tail = lit
 			}
 		case '<':
 			tok = token.HEREDOC
@@ -195,6 +204,10 @@ func (s *Scanner) Scan() token.Token {
 			if isDecimal(s.peek()) {
 				ch := s.next()
 				tok = s.scanNumber(ch)
+				lit := s.scanUnits() // check for units when parsing a number
+				if lit != "" {
+					tail = lit
+				}
 			} else {
 				tok = token.SUB
 			}
@@ -209,7 +222,11 @@ func (s *Scanner) Scan() token.Token {
 	// create token literal
 	var tokenText string
 	if s.tokStart >= 0 {
-		tokenText = string(s.src[s.tokStart:s.tokEnd])
+		if tail != "" {
+			tokenText = string(s.src[s.tokStart:s.tokEnd - len(tail)])
+		}else{
+			tokenText = string(s.src[s.tokStart:s.tokEnd])
+		}
 	}
 	s.tokStart = s.tokEnd // ensure idempotency of tokenText() call
 
@@ -217,6 +234,7 @@ func (s *Scanner) Scan() token.Token {
 		Type: tok,
 		Pos:  s.tokPos,
 		Text: tokenText,
+		Tail: tail,
 	}
 }
 
@@ -332,7 +350,7 @@ func (s *Scanner) scanNumber(ch rune) token.Type {
 		}
 		return token.FLOAT
 	}
-
+	
 	if ch != eof {
 		s.unread()
 	}
@@ -526,6 +544,25 @@ func (s *Scanner) scanIdentifier() string {
 	offs := s.srcPos.Offset - s.lastCharLen
 	ch := s.next()
 	for isLetter(ch) || isDigit(ch) || ch == '-' || ch == '.' {
+		ch = s.next()
+	}
+
+	if ch != eof {
+		s.unread() // we got identifier, put back latest char
+	}
+
+	return string(s.src[offs:s.srcPos.Offset])
+}
+
+// scanUnits scans a units suffix and returns the literal string; only [a-zA-Z] is permitted
+func (s *Scanner) scanUnits() string {
+	if s.peek() == eof {
+		return ""
+	}
+	
+	offs := s.srcPos.Offset
+	ch := s.next()
+	for isLetter(ch) {
 		ch = s.next()
 	}
 

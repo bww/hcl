@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	// "time"
+	"time"
 	
 	"github.com/bww/hcl/hcl/ast"
 	"github.com/bww/hcl/hcl/parser"
@@ -148,51 +148,72 @@ func (d *decoder) decodeInt(name string, node ast.Node, result reflect.Value) er
 	case *ast.LiteralType:
 		switch n.Token.Type {
 		case token.NUMBER:
-			// get the real, underlying kind
-			rkind := reflect.ValueOf(result.Interface()).Kind()
-			
+			rval := result.Interface()
+			var rkind reflect.Kind
 			var bits int
-			switch rkind {
-			case reflect.Int:
-				bits = 0
-			case reflect.Int8, reflect.Uint8:
-				bits = 8
-			case reflect.Int16, reflect.Uint16:
-				bits = 16
-			case reflect.Int32, reflect.Uint32:
-				bits = 32
-			case reflect.Int64, reflect.Uint64:
+			
+			if _, ok := rval.(time.Duration); ok {
 				bits = 64
-			default:
-				return fmt.Errorf("Unsupported type: %v", rkind)
+			}else{
+				rkind = reflect.ValueOf(rval).Kind() // get the real, underlying kind
+				switch rkind {
+				case reflect.Int:
+					bits = 0
+				case reflect.Int8, reflect.Uint8:
+					bits = 8
+				case reflect.Int16, reflect.Uint16:
+					bits = 16
+				case reflect.Int32, reflect.Uint32:
+					bits = 32
+				case reflect.Int64, reflect.Uint64:
+					bits = 64
+				default:
+					return fmt.Errorf("Unsupported type: %v", rkind)
+				}
 			}
 			
+			fmt.Printf("---> %#v\n", n.Token)
 			v, err := strconv.ParseInt(n.Token.Text, 0, bits)
 			if err != nil {
 				return err
 			}
 			
-			switch rkind {
-			case reflect.Int:
-				result.Set(reflect.ValueOf(int(v)))
-			case reflect.Int8:
-				result.Set(reflect.ValueOf(int8(v)))
-			case reflect.Int16:
-				result.Set(reflect.ValueOf(int16(v)))
-			case reflect.Int32:
-				result.Set(reflect.ValueOf(int32(v)))
-			case reflect.Int64:
-				result.Set(reflect.ValueOf(int64(v)))
-			case reflect.Uint8:
-				result.Set(reflect.ValueOf(uint8(v)))
-			case reflect.Uint16:
-				result.Set(reflect.ValueOf(uint16(v)))
-			case reflect.Uint32:
-				result.Set(reflect.ValueOf(uint32(v)))
-			case reflect.Uint64:
-				result.Set(reflect.ValueOf(uint64(v)))
-			default:
-				return fmt.Errorf("Unsupported type: %v", rkind)
+			if _, ok := rval.(time.Duration); ok {
+				uval := time.Second // default to seconds
+				if units := n.Token.Tail; units != "" {
+					switch units {
+						case "ns": 	uval = time.Nanosecond
+						case "us": 	uval = time.Microsecond
+						case "ms": 	uval = time.Millisecond
+						case "s": 	uval = time.Second
+						case "m":		uval = time.Minute
+						case "h":		uval = time.Hour
+					}
+				}
+				result.Set(reflect.ValueOf(time.Duration(v) * uval))
+			}else{
+				switch rkind { // defined above in a condition, we have the same condition when it's used here
+				case reflect.Int:
+					result.Set(reflect.ValueOf(int(v)))
+				case reflect.Int8:
+					result.Set(reflect.ValueOf(int8(v)))
+				case reflect.Int16:
+					result.Set(reflect.ValueOf(int16(v)))
+				case reflect.Int32:
+					result.Set(reflect.ValueOf(int32(v)))
+				case reflect.Int64:
+					result.Set(reflect.ValueOf(int64(v)))
+				case reflect.Uint8:
+					result.Set(reflect.ValueOf(uint8(v)))
+				case reflect.Uint16:
+					result.Set(reflect.ValueOf(uint16(v)))
+				case reflect.Uint32:
+					result.Set(reflect.ValueOf(uint32(v)))
+				case reflect.Uint64:
+					result.Set(reflect.ValueOf(uint64(v)))
+				default:
+					return fmt.Errorf("Unsupported type: %v", rkind)
+				}
 			}
 			
 			return nil

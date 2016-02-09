@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/bww/hcl/hcl/ast"
 )
@@ -637,6 +638,55 @@ func TestDecode_intTypes(t *testing.T) {
 	}
 	if value.CountU64 != 123456789012 {
 		t.Fatalf("bad: %#v", value.CountU64)
+	}
+}
+
+func TestDecode_unitsSuffix(t *testing.T) {
+	var value struct {
+		A, B, C, D int
+		E, F, G float64
+	}
+	
+	err := Decode(&value, testReadFile(t, "units_suffix.hcl"))
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+	
+	if value.A != 123 {
+		t.Fatalf("bad: %#v", value.A)
+	}
+	if value.B != 0123 {
+		t.Fatalf("bad: %#v", value.B)
+	}
+	if value.C != 0x123 {
+		t.Fatalf("bad: %#v", value.C)
+	}
+	if value.D != -123 {
+		t.Fatalf("bad: %#v", value.D)
+	}
+	if value.E != 1e+10 {
+		t.Fatalf("bad: %#v", value.E)
+	}
+	if value.F != 0.123 {
+		t.Fatalf("bad: %#v", value.F)
+	}
+	if value.G != 0.123 {
+		t.Fatalf("bad: %#v", value.G)
+	}
+}
+
+func TestDecode_duration(t *testing.T) {
+	var value struct {
+		Duration	time.Duration
+	}
+	
+	err := Decode(&value, testReadFile(t, "time.hcl"))
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+	
+	if value.Duration != time.Second * 100 {
+		t.Fatalf("bad: %#v", value.Duration)
 	}
 }
 

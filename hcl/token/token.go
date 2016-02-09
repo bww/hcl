@@ -16,6 +16,7 @@ type Token struct {
 	Pos  Pos
 	Text string
 	JSON bool
+	Tail string
 }
 
 // Type is the set of lexical tokens of the HCL (HashiCorp Configuration Language)
