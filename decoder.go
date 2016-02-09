@@ -172,7 +172,6 @@ func (d *decoder) decodeInt(name string, node ast.Node, result reflect.Value) er
 				}
 			}
 			
-			fmt.Printf("---> %#v\n", n.Token)
 			v, err := strconv.ParseInt(n.Token.Text, 0, bits)
 			if err != nil {
 				return err

@@ -664,7 +664,7 @@ func TestDecode_unitsSuffix(t *testing.T) {
 	if value.D != -123 {
 		t.Fatalf("bad: %#v", value.D)
 	}
-	if value.E != 1e+10 {
+	if value.E != 123e+10 {
 		t.Fatalf("bad: %#v", value.E)
 	}
 	if value.F != 0.123 {
