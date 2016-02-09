@@ -685,7 +685,7 @@ func TestDecode_duration(t *testing.T) {
 		t.Fatalf("err: %s", err)
 	}
 	
-	if value.Duration != time.Second * 100 {
+	if value.Duration != time.Millisecond * 100 {
 		t.Fatalf("bad: %#v", value.Duration)
 	}
 }

@@ -1,2 +1,2 @@
 
-duration = 100s
+duration = 100ms
